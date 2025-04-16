@@ -11,6 +11,7 @@ from sklearn.metrics import mean_absolute_error
 import joblib
 from sklearn.metrics import mean_squared_error, r2_score
 import os
+from datetime import datetime
 
 season_names = {1: 'Summer', 2: 'Monsoon', 3: 'Winter'}
 cities = ['Mumbai', 'Delhi', 'Bangalore', 'Chennai', 'Kolkata']  # All available cities
@@ -217,11 +218,135 @@ def predict_weather(models):
         except Exception as e:
             print(f"Error: {e}\nPlease try again.")
 
+def generate_monthly_forecast(models, df):
+    """Generate monthly temperature forecast graph matching screenshot style"""
+    print("\n=== Monthly Temperature Forecast ===")
+    print(f"Available cities: {', '.join(cities)}")
+    
+    while True:
+        try:
+            # Get user input
+            city = input("\nEnter city: ").title()
+            if city not in cities:
+                print(f"Error: City not found. Please choose from: {', '.join(cities)}")
+                continue
+                
+            year_month = input("Enter year and month (YYYY-MM): ")
+            year, month = map(int, year_month.split('-'))
+            month_name = datetime(year, month, 1).strftime('%b')
+            
+            # Get number of days in month
+            if month == 12:
+                next_month = 1
+                next_year = year + 1
+            else:
+                next_month = month + 1
+                next_year = year
+            days_in_month = (datetime(next_year, next_month, 1) - datetime(year, month, 1)).days
+            
+            # Generate predictions for each day
+            predictions = []
+            for day in range(1, days_in_month + 1):
+                current_date = datetime(year, month, day)
+                season = 1 if 3 <= month <= 5 else (2 if 6 <= month <= 9 else 3)
+                
+                # Get historical averages for this day
+                day_data = df[(df['City'] == city) & 
+                            (df['Date'].dt.month == month) & 
+                            (df['Date'].dt.day == day)]
+                
+                if len(day_data) > 0:
+                    humidity = day_data['Humidity (%)'].mean()
+                    wind = day_data['Wind (km/h)'].mean()
+                    precip = day_data['Precip (mm)'].mean()
+                else:
+                    # Fallback to monthly averages
+                    month_data = df[(df['City'] == city) & 
+                                  (df['Date'].dt.month == month)]
+                    humidity = month_data['Humidity (%)'].mean()
+                    wind = month_data['Wind (km/h)'].mean()
+                    precip = month_data['Precip (mm)'].mean()
+                
+                # Prepare input for prediction
+                input_data = {
+                    'Month': [month],
+                    'Season': [season],
+                    'Humidity (%)': [humidity],
+                    'Wind (km/h)': [wind],
+                    'Precip (mm)': [precip]
+                }
+                
+                # Add city dummy variables
+                for c in cities:
+                    input_data[f'City_{c}'] = [1 if city == c else 0]
+                
+                # Get model features
+                model_features = list(models['TMAX'].feature_names_in_)
+                input_df = pd.DataFrame(input_data)[model_features]
+                
+                # Make predictions
+                pred_tmax = models['TMAX'].predict(input_df)[0]
+                pred_tmin = models['TMIN'].predict(input_df)[0]
+                
+                predictions.append({
+                    'Day': day,
+                    'TMAX': pred_tmax,
+                    'TMIN': pred_tmin
+                })
+            
+            # Create DataFrame from predictions
+            pred_df = pd.DataFrame(predictions)
+            
+            # Create the plot with exact style from screenshot
+            plt.figure(figsize=(15, 8))
+            
+            # Plot forecasted temperatures with specified colors
+            plt.plot(pred_df['Day'], pred_df['TMAX'], color='#FF7F00', linewidth=3, label='Forecast High')  # Orange
+            plt.plot(pred_df['Day'], pred_df['TMIN'], color='#1F77B4', linewidth=3, label='Forecast Low')   # Blue
+            
+            # Format the plot exactly like screenshot
+            plt.title('TEMPERATURE GRAPH', loc='left', pad=10, fontsize=16, fontweight='bold')
+            
+            # Add temperature scale on left
+            temp_scale = [18, 26, 34, 42, 50]
+            for temp in temp_scale:
+                plt.text(-0.5, temp, f'{temp}°', ha='right', va='center', fontsize=12)
+            
+            # Add day numbers at bottom
+            day_labels = [f'Day {d}' for d in range(1, days_in_month+1)]
+            plt.xticks(pred_df['Day'], day_labels, rotation=45, ha='right')
+            
+            # Remove top and right spines
+            plt.gca().spines['top'].set_visible(False)
+            plt.gca().spines['right'].set_visible(False)
+            
+            # Y-axis settings
+            plt.ylim(15, 52)
+            plt.yticks(temp_scale)
+            plt.ylabel('Temperature (°C)', fontsize=12)
+            
+            # Add grid lines
+            plt.grid(True, axis='y', linestyle='--', alpha=0.3)
+            
+            # Add legend at bottom
+            plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.15), 
+                      ncol=3, frameon=False, fontsize=12)
+            
+            plt.tight_layout()
+            plt.show()
+            
+            if input("\nGenerate another forecast? (y/n): ").lower() != 'y':
+                break
+                
+        except Exception as e:
+            print(f"Error: {e}\nPlease try again with format YYYY-MM")
+
 def main():
     """Main program flow"""
     # Load or preprocess data
     if os.path.exists('cleaned_weather_data.csv'):
         df = pd.read_csv('cleaned_weather_data.csv')
+        df['Date'] = pd.to_datetime(df['Date'])
         print("Loaded preprocessed data")
     else:
         df = preprocess_data()
@@ -239,9 +364,24 @@ def main():
     else:
         models, eval_results = train_and_evaluate_models(df)
     
-    # Run prediction interface
-    predict_weather(models)
-    print("\nWeather prediction system closed.")
+    # Main menu
+    while True:
+        print("\n=== Weather Analysis System ===")
+        print("1. Single Day Weather Prediction")
+        print("2. Monthly Temperature Forecast")
+        print("3. Exit")
+        
+        choice = input("Enter your choice (1-3): ")
+        
+        if choice == '1':
+            predict_weather(models)
+        elif choice == '2':
+            generate_monthly_forecast(models, df)
+        elif choice == '3':
+            print("\nWeather analysis system closed.")
+            break
+        else:
+            print("Invalid choice. Please enter 1, 2, or 3.")
 
 if __name__ == "__main__":
     main()

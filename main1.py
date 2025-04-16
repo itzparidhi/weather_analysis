@@ -127,6 +127,29 @@ def perform_regression_analysis(df):
     plt.tight_layout()
     plt.show()
 
+
+def plot_monthly_temperature_trends(df):
+    """Line plot of monthly average temperatures per city"""
+    plt.figure(figsize=(12, 6))
+    
+    # Calculate monthly averages
+    monthly_avg = df.groupby(['City', 'Month'])['TAVG'].mean().reset_index()
+    
+    # Plot with Seaborn
+    sns.lineplot(data=monthly_avg, x='Month', y='TAVG', hue='City', 
+                 palette='viridis', marker='o', linewidth=2.5)
+    
+    plt.title('Monthly Average Temperature Trends by City')
+    plt.xlabel('Month')
+    plt.ylabel('Average Temperature (°C)')
+    plt.xticks(range(1, 13), 
+               ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'])
+    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
+
 def main():
     """Main analysis workflow"""
     # Load cleaned data
@@ -141,6 +164,7 @@ def main():
     perform_hypothesis_tests(df)
     perform_anova(df)
     perform_regression_analysis(df)
+    plot_monthly_temperature_trends(df)
     
     print("\nAnalysis complete. Close the plot windows to exit.")
 
