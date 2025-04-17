@@ -144,6 +144,10 @@ def train_and_evaluate_models(df):
         mae = mean_absolute_error(y_test, y_pred) #it measures the average absolute difference between predicted (y_pred) and actual (y_test) values.
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
         r2 = r2_score(y_test, y_pred) # it measures the proportion of variance in the target explained by the model.
+
+        # MAE = predicted - actual/n
+        # RMSE = sqrt((predicted - actual)^2/n) 
+        # R2 = 1 - (sum of squares of residuals / total sum of squares)
         
         # Store results
         models[target] = model
