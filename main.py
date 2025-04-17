@@ -110,10 +110,10 @@ def preprocess_data():
     return excel_data
 
 def train_and_evaluate_models(df):
-    """Train and evaluate weather prediction models with 70-30 split"""
-    print("\nTraining weather prediction models with 70-30 train-test split...")
+    """Train and evaluate weather prediction models """
+    print("\nTraining weather prediction models ...")
     
-    # Prepare data - include all cities in dummy variables
+    # ensures to include all cities in dummy variables
     df = pd.get_dummies(df, columns=['City'], drop_first=False)
     
     # Get all city columns
@@ -139,10 +139,11 @@ def train_and_evaluate_models(df):
         model.fit(X_train, y_train)
         
         # Evaluate on test set
+        #These key metrics are computed to assess model performance
         y_pred = model.predict(X_test)
-        mae = mean_absolute_error(y_test, y_pred)
+        mae = mean_absolute_error(y_test, y_pred) #it measures the average absolute difference between predicted (y_pred) and actual (y_test) values.
         rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-        r2 = r2_score(y_test, y_pred)
+        r2 = r2_score(y_test, y_pred) # it measures the proportion of variance in the target explained by the model.
         
         # Store results
         models[target] = model

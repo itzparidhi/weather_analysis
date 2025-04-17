@@ -26,15 +26,15 @@ def plot_temperature_distribution(df):
     plt.ylabel('Frequency')
     plt.show()
 
-def plot_correlation_matrix(df):
-    """Plot correlation matrix of weather features"""
-    plt.figure(figsize=(10, 8))
-    corr_cols = ['TAVG', 'TMAX', 'TMIN', 'Humidity (%)', 'Wind (km/h)', 'Feels Like']
-    corr = df[corr_cols].corr()
-    sns.heatmap(corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1, fmt='.2f')
-    plt.title('Weather Parameters Correlation Matrix')
-    plt.tight_layout()
-    plt.show()
+# def plot_correlation_matrix(df):
+#     """Plot correlation matrix of weather features"""
+#     plt.figure(figsize=(10, 8))
+#     corr_cols = ['TAVG', 'TMAX', 'TMIN', 'Humidity (%)', 'Wind (km/h)', 'Feels Like']
+#     corr = df[corr_cols].corr()
+#     sns.heatmap(corr, annot=True, cmap='coolwarm', vmin=-1, vmax=1, fmt='.2f')
+#     plt.title('Weather Parameters Correlation Matrix')
+#     plt.tight_layout()
+#     plt.show()
 
 def analyze_probability_distributions(df):
     """Analyze temperature probability distributions by city"""
