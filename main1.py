@@ -159,7 +159,7 @@ def main():
     
     # Perform EDA and statistical analysis
     plot_temperature_distribution(df)
-    plot_correlation_matrix(df)
+    # plot_correlation_matrix(df)
     analyze_probability_distributions(df)
     perform_hypothesis_tests(df)
     perform_anova(df)
